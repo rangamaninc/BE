@@ -1,2 +1,1 @@
-# BE
-backend project for capin
+# CapinAsia

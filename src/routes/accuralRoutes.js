@@ -1,6 +1,6 @@
 // src/routes/taskRoutes.js
 const express = require('express');
-const AccuralController = require('/controllers/AccuralController');
+const AccuralController = require('controllers/AccuralController');
 
 const authMiddleware = require('../middleware/authMiddleware');
 

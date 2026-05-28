@@ -24,7 +24,7 @@ const Task = {
 
     try {
       const [result] = await connection.execute(
-        'INSERT INTO capinasiadb.tasks(name, description, assigned_by, assigned_to, clientid, start_date, end_date, file_location, `type`, sub_type, custom_fields, status, last_status_updated_by)VALUES(?,?,?,?,?,STR_TO_DATE( ? , "%m/%d/%Y" ),STR_TO_DATE( ? , "%m/%d/%Y" ),?,?,?,?,?,?);',
+        'INSERT INTO capinasiadb.tasks(name, description, assigned_by, assigned_to, clientid, start_date, end_date, file_location, `type`, sub_type, custom_fields, status, last_status_updated_by)VALUES(?,?,?,?,?,STR_TO_DATE( ? , \'%m/%d/%Y\' ),STR_TO_DATE( ? , \'%m/%d/%Y\' ),?,?,?,?,?,?);',
         [
           task.name,
           task.description,

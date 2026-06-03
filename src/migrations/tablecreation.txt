@@ -1,0 +1,114 @@
+-- migrations table
+CREATE TABLE migrations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    migration_name VARCHAR(255) NOT NULL UNIQUE,
+    executed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Roles
+CREATE TABLE roles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    role_name VARCHAR(100) NOT NULL UNIQUE,
+    description VARCHAR(500)
+);
+
+-- Users
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    
+    username VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100),
+    role_name VARCHAR(100),
+    
+    password_hash VARCHAR(500) NOT NULL,
+    
+    is_active BIT(1) NOT NULL DEFAULT b'1',
+    is_locked BIT(1) NOT NULL DEFAULT b'0',
+    
+    failed_login_attempts INT NOT NULL DEFAULT 0,
+    
+    last_login_date DATETIME NULL,
+    password_changed_date DATETIME NULL,
+    password_expiry_date DATETIME NULL,
+    
+    created_by VARCHAR(100) NOT NULL,
+    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    modified_by VARCHAR(100) NULL,
+    modified_date DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- User Roles
+CREATE TABLE user_roles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    
+    assigned_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    assigned_by VARCHAR(100) NOT NULL,
+    
+    CONSTRAINT fk_user_roles_user
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        
+    CONSTRAINT fk_user_roles_role
+        FOREIGN KEY (role_id) REFERENCES roles(id),
+        
+    CONSTRAINT uq_user_role UNIQUE (user_id, role_id)
+);
+
+--clients
+
+CREATE TABLE clients (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    parent_id BIGINT NULL,
+    
+    code VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    
+    type ENUM('Captive Manager', 'Captive') NOT NULL,
+    
+    is_active BIT(1) NOT NULL DEFAULT b'1',
+    
+    created_by VARCHAR(100) NOT NULL DEFAULT 'SYSTEM',
+    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+);
+
+--user clients
+
+CREATE TABLE userclients (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    user_id BIGINT NOT NULL,
+    client_id BIGINT NOT NULL,
+
+    is_active BIT(1) NOT NULL DEFAULT b'1',
+
+    created_by VARCHAR(100) NOT NULL DEFAULT 'SYSTEM',
+    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    modified_by VARCHAR(100) NULL,
+    modified_date DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_user_clients_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT fk_user_clients_client
+        FOREIGN KEY (client_id)
+        REFERENCES clients(id),
+
+    CONSTRAINT uq_user_client
+        UNIQUE (user_id, client_id)
+);
+
+-- Seed Roles
+--INSERT INTO roles (role_name, description)
+--VALUES
+--('Admin', 'System Administrator'),
+--('Manager', 'Manager'),
+--('Operator', 'Operator'),
+--('User', 'User');

@@ -4,7 +4,10 @@
   "description": "",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js",
+    "start": "node src/start.js",
+    "migrate": "node src/migrations/migrate.js",
+    "seed": "node src/migrations/seeddata/seed.js",
+    "migrate-db": "npm run migrate && npm run seed",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

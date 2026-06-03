@@ -15,7 +15,8 @@ const authMiddleware = (req, res, next) => {
     const decoded = jwt.verify(token, config.jwtSecret);
     const user = decoded.user;
     // console.log(user)
-    req.user=user.id;
+    req.user = user.id;
+    req.userRole = user.role_name || user.role;
     // Check for session inactivity (30 minutes)
     const currentTime = Date.now();
     if (currentTime - user.lastActivity > 30 * 60 * 1000) {

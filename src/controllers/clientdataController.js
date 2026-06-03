@@ -6,8 +6,12 @@ const ClientdataController = {
   async getGLCodeMaster(req, res) {
     try {
       const clientId = req.params.clientId;
+      const masterOnly = req.query.masterOnly === "true";
 
-      const { result } = await Clientdata.getGLCodesbyClient(clientId);
+      const { result } = await Clientdata.getGLCodesbyClient(
+        clientId,
+        masterOnly
+      );
       res.status(201).json({
         success: true,
         glcodes: result,

@@ -4,6 +4,18 @@ const OpeningBalance = require("../models/Openingbalance")
 const config = require("../config");
 
 const OpeningBalanceController = {
+  async getOpeningBalances(req, res) {
+    try {
+      const clientId = req.params.clientId;
+      const openingBalances =
+        await OpeningBalance.getOpeningBalancesByClient(clientId);
+      res.status(200).json({ success: true, openingBalances });
+    } catch (error) {
+      config.logger.error("Error fetching opening balances:", error);
+      res.status(500).json({ success: false, error: "Internal Server Error" });
+    }
+  },
+
   async createOpeningBalance(req, res) {
     try {
       const { openingBalanceDate, amount, glCode, isDebit } = req.body;
@@ -17,12 +29,11 @@ const OpeningBalanceController = {
           openingBalanceDate
         );
       if (existingBalance) {
-        return res
-          .status(400)
-          .json({
-            error:
-              "Opening balance already exists for this master code and date",
-          });
+        return res.status(400).json({
+          success: false,
+          error:
+            "Opening balance already exists for this GL code and date",
+        });
       }
 
       // Create the opening balance record

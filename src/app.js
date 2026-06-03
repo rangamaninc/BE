@@ -51,4 +51,17 @@ app.use("/health", healthRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => config.logger.info(`Server is running on port ${PORT}`));
+const server = app.listen(PORT, () =>
+  config.logger.info(`Server is running on port ${PORT}`)
+);
+
+server.on("error", (error) => {
+  if (error.code === "EADDRINUSE") {
+    config.logger.error(
+      `Port ${PORT} is already in use. Stop the other process or set a different PORT in .env.`
+    );
+    process.exit(1);
+  }
+
+  throw error;
+});

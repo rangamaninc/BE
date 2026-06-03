@@ -1,72 +1,84 @@
 // src/controllers/AuthController.js
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mysql = require('mysql2/promise');
 const config = require('../config');
 const User = require('../models/User');
-const { log } = require('winston');
-const mysqlDatetime = require('../utils/common');
+const Client = require('../models/Client');
 
 const AuthController = {
   async loginUser(req, res) {
+    let connection;
+
     try {
-      const { id, password } = req.body;
+      const login = req.body.username || req.body.id;
+      const { password } = req.body;
 
-      // Connect to the database
-      const connection = await mysql.createConnection(config.database);
-      config.logger.info('Database Connected');
-      // Check if the user exists
-      
-      const [rows] = await connection.execute('SELECT * FROM users WHERE id = ?', [id]);
-      const user = rows[0];
-      config.logger.info('User Info:',user);
+      if (!login || !password) {
+        return res.status(400).json({ success: false, error: 'Username and password are required' });
+      }
+
+      const user = await User.findByUsernameOrEmail(login);
+
       if (!user) {
-        config.logger.info('User Info:',!user);
-        return res.status(401).json({ success:false,error: 'Invalid credentials' });
+        return res.status(404).json({
+          success: false,
+          error: 'No account found with this email address.',
+        });
       }
 
-      // Check the 
-      
-      const passwordMatch = await User.comparePassword(password, user.password);
+      if (user.is_active === 0) {
+        return res.status(401).json({ success: false, error: 'Your account is inactive. Contact an administrator.' });
+      }
 
-    //   const passwordMatch = await bcrypt.compare(password, user.password);
+      const passwordMatch = await User.comparePassword(password, user.password_hash);
       if (!passwordMatch) {
-        return res.status(401).json({success: false, error: 'Invalid credentials' });
+        return res.status(401).json({ success: false, error: 'Incorrect password. Please try again.' });
       }
 
-      // Update last activity
-      const currentTime = mysqlDatetime
-      await connection.execute('UPDATE users SET lastactivity = ? WHERE id = ?', [currentTime, user.id]);
-
-      const [clients] = await connection.execute('select a.id,a.name from clients a where a.id in (select clientid from clientMapping where userid=?)', [user.id]);
-      
-      var mappedUsersdata;
-
-      if (user.role?.toLowerCase() === "manager"){
-         [mappedUsersdata] = await connection.execute('select distinct userid as mappedUsers from userMapping where managerid=?',[id])
-      }
-      else{
-         [mappedUsersdata] = await connection.execute('select distinct managerid as mappedUsers from userMapping where userid=?',[id])
+      if (User.isPasswordExpired(user)) {
+        return res.status(401).json({ success: false, error: 'Password has expired. Please reset your password.' });
       }
 
-      const mappedUsers = mappedUsersdata.map(jsonObj => jsonObj.mappedUsers);
-      // Create and send the JWT
-      const token = jwt.sign({ user }, config.jwtSecret, { expiresIn: '1y' });
-      const role = user.role
-      const success=true
+      await User.recordLastLogin(user.id);
 
-      res.json({ success,role, token, clients, mappedUsers });
+      const clients = await Client.getVisibleClientsForUser(user.id, user.role_name);
+
+      connection = await mysql.createConnection(config.database);
+
+      let mappedUsersdata;
+      const roleName = user.role_name?.toLowerCase();
+
+      if (roleName === 'manager') {
+        [mappedUsersdata] = await connection.execute(
+          'SELECT DISTINCT userid AS mappedUsers FROM userMapping WHERE managerid = ?',
+          [user.id]
+        );
+      } else {
+        [mappedUsersdata] = await connection.execute(
+          'SELECT DISTINCT managerid AS mappedUsers FROM userMapping WHERE userid = ?',
+          [user.id]
+        );
+      }
+
+      const mappedUsers = mappedUsersdata.map((row) => row.mappedUsers);
+      const tokenUser = User.toTokenUser(user);
+      const token = jwt.sign({ user: tokenUser }, config.jwtSecret, { expiresIn: '1y' });
+
+      res.json({
+        success: true,
+        role: user.role_name,
+        token,
+        clients,
+        mappedUsers,
+      });
     } catch (error) {
-      const success=false
       config.logger.error('Error during login:', error);
-      res.status(500).json({ success,error: 'Internal Server Error' });
-    } 
-    // finally {
-    //   // Close the database connection
-    //   if (connection) {
-    //     connection.end();
-    //   }
-    // }
+      res.status(500).json({ success: false, error: 'Internal Server Error' });
+    } finally {
+      if (connection) {
+        await connection.end();
+      }
+    }
   },
 };
 

@@ -8,6 +8,7 @@ const accuralRoutes = require('./accuralRoutes')
 const insuranceRoutes = require('./insuranceRoutes')
 const reconcileRoutes = require('./reconcileRoutes')
 const accountingRoutes = require('./accountingRoutes')
+const clientRoutes = require('./clientRoutes')
 const errorHandler = require('../utils/errorHandler');
 const config = require('../config');
 
@@ -22,6 +23,7 @@ router.use('/accurals', accuralRoutes);
 router.use('/insurance', insuranceRoutes);
 router.use('/reconcile', reconcileRoutes);
 router.use('/accounting', accountingRoutes);
+router.use('/clients', clientRoutes);
 
 
 // Other route modules go here

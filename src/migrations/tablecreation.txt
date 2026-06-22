@@ -1,3 +1,19 @@
+/*
+-------------------Tables Used---------------------
+1. Migrations (currently not used)
+2. Users
+3. Roles
+4. User Roles
+5. clients
+6. User clients
+7. Opening Balances
+8. General Ledger
+9. Chart Of Accounts (GL Codes)
+10. Client GL Code Mapping
+11. Journal header
+12. Journal Details
+
+*/
 -- migrations table
 CREATE TABLE migrations (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -104,6 +120,34 @@ CREATE TABLE userclients (
     CONSTRAINT uq_user_client
         UNIQUE (user_id, client_id)
 );
+
+CREATE TABLE opening_balances (
+    opening_balance_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    client_id      VARCHAR(20) NOT NULL,
+    gl_code        VARCHAR(20) NOT NULL,
+
+    financial_year VARCHAR(10) NOT NULL,      -- Example: 2025-26
+    balance_date   DATE NOT NULL,
+
+    opening_amount DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+
+    balance_type   ENUM('D','C') NOT NULL COMMENT 'D=Debit, C=Credit',
+
+    currency_code  CHAR(3) NOT NULL DEFAULT 'USD',
+
+    remarks        VARCHAR(500),
+
+    created_by     VARCHAR(100) NOT NULL,
+    created_on     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    updated_by     VARCHAR(100),
+    updated_on     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                  ON UPDATE CURRENT_TIMESTAMP,
+
+   -- UNIQUE KEY uk_opening_balance
+   --     (client_id, gl_code, financial_year)
+) ;
 
 -- Seed Roles
 --INSERT INTO roles (role_name, description)

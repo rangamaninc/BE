@@ -50,13 +50,19 @@ const AuthController = {
 
       if (roleName === 'manager') {
         [mappedUsersdata] = await connection.execute(
-          'SELECT DISTINCT userid AS mappedUsers FROM userMapping WHERE managerid = ?',
-          [user.id]
+          `SELECT DISTINCT uc2.user_id AS mappedUsers
+           FROM userclients uc1
+           INNER JOIN userclients uc2 ON uc1.client_id = uc2.client_id
+           WHERE uc1.user_id = ? AND uc2.user_id != ?`,
+          [user.id, user.id]
         );
       } else {
         [mappedUsersdata] = await connection.execute(
-          'SELECT DISTINCT managerid AS mappedUsers FROM userMapping WHERE userid = ?',
-          [user.id]
+          `SELECT DISTINCT uc2.user_id AS mappedUsers
+           FROM userclients uc1
+           INNER JOIN userclients uc2 ON uc1.client_id = uc2.client_id
+           WHERE uc1.user_id = ? AND uc2.user_id != ?`,
+          [user.id, user.id]
         );
       }
 

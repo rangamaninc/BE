@@ -105,10 +105,19 @@ const Cashbook = {
 
       // Get the initial opening balance
       const [initialBalanceResult] = await connection.execute(
-        'SELECT amount FROM openingBalances WHERE clientid = ? and glcode = ? ORDER BY date ASC LIMIT 1',
-        [clientID,cbGLcode]
+        `SELECT CASE
+           WHEN balance_type = 'D' THEN opening_amount
+           ELSE -opening_amount
+         END AS amount
+         FROM opening_balances
+         WHERE client_id = ? AND gl_code = ?
+         ORDER BY balance_date ASC
+         LIMIT 1`,
+        [String(clientID), cbGLcode]
       );
-      const initialBalance = initialBalanceResult[0] ? initialBalanceResult[0].amount : 0;
+      const initialBalance = initialBalanceResult[0]
+        ? Number(initialBalanceResult[0].amount)
+        : 0;
 
       // Initialize the cumulative balance with the initial opening balance
       let cumulativeBalance = initialBalance;

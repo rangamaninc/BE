@@ -53,7 +53,8 @@ async function runMigrations() {
   );
 
   try {
-    const migrationsDir = __dirname;
+    //const migrationsDir = __dirname;
+    const migrationsDir = path.join(__dirname, 'migrationscripts');
     const files = fs
       .readdirSync(migrationsDir)
       .filter((file) => file.endsWith('.sql'))

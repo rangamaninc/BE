@@ -7,17 +7,15 @@ const Clientdata = {
     const connection = await mysql.createConnection(config.database);
 
     const query = masterOnly
-      ? `(select distinct c.code, c.name from clientGlCodeMaster c inner join glCodeMaster g on g.code = c.code where c.clientid = ?)
+      ? `(select distinct coa.gl_code AS code, coa.gl_name AS name from chart_of_accounts coa)
          union
-         (select distinct a.code, a.name from glCodeMaster a where not exists (select 1 from clientGlCodeMaster b where b.clientid = ? and b.code = a.code))`
-      : `(select distinct code, name from clientGlCodeMaster where clientid = ?)
+         (select distinct cgm.client_gl_code AS code, cgm.client_gl_name AS name from client_gl_mapping cgm where CAST(cgm.client_id AS CHAR) = CAST(? AS CHAR))`
+      : `(select distinct coa.gl_code AS code, coa.gl_name AS name from chart_of_accounts coa)
          union
-         (select distinct a.code, a.name from glCodeMaster a where not exists (select 1 from clientGlCodeMaster b where b.clientid = ? and b.code = a.code))`;
+         (select distinct cgm.client_gl_code AS code, cgm.client_gl_name AS name from client_gl_mapping cgm where CAST(cgm.client_id AS CHAR) = CAST(? AS CHAR))`;
 
     try {
       const [result] = await connection.execute(query, [clientId, clientId]);
-    //   const createdTransactionId = result.insertId;
-
       return { result };
     } finally {
       connection.end();

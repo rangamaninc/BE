@@ -23,11 +23,11 @@ const Accounting = {
     try {
       const [rows] = await connection.execute(
         `SELECT COALESCE(SUM(
-           CASE WHEN is_debit = '1' THEN amount ELSE -amount END
+           CASE WHEN balance_type = 'D' THEN opening_amount ELSE -opening_amount END
          ), 0) AS balance
-         FROM openingBalances
-         WHERE clientid = ? AND glcode = ?`,
-        [clientId, glCode]
+         FROM opening_balances
+         WHERE client_id = ? AND gl_code = ?`,
+        [String(clientId), glCode]
       );
       return Number(rows[0]?.balance) || 0;
     } finally {
@@ -35,23 +35,23 @@ const Accounting = {
     }
   },
 
-  async getTrialBalance(clientId) {
+    async getTrialBalance(clientId) {
     const connection = await mysql.createConnection(config.database);
     try {
       const [rows] = await connection.execute(
         `SELECT g.code AS glcode,
           IFNULL((
-            SELECT SUM(CASE WHEN is_debit = '1' THEN amount ELSE -amount END)
-            FROM openingBalances WHERE clientid = ? AND glcode = g.code
+            SELECT SUM(CASE WHEN balance_type = 'D' THEN opening_amount ELSE -opening_amount END)
+            FROM opening_balances WHERE client_id = ? AND gl_code = g.code
           ), 0) +
           IFNULL((
             SELECT SUM(amount) FROM subtransactions
             WHERE clientid = ? AND glcode = g.code
           ), 0) AS balance
          FROM (
-           SELECT DISTINCT code FROM clientGlCodeMaster WHERE clientid = ?
+           SELECT DISTINCT coa.gl_code AS code FROM chart_of_accounts coa
            UNION
-           SELECT DISTINCT code FROM glCodeMaster
+           SELECT DISTINCT cgm.client_gl_code AS code FROM client_gl_mapping cgm WHERE CAST(cgm.client_id AS CHAR) = CAST(? AS CHAR)
          ) g`,
         [clientId, clientId, clientId]
       );

@@ -17,6 +17,15 @@ const authMiddleware = (req, res, next) => {
     // console.log(user)
     req.user = user.id;
     req.userRole = user.role_name || user.role;
+    req.userName =
+      [user.first_name, user.last_name].filter(Boolean).join(' ').trim() ||
+      user.username ||
+      user.email;
+    req.userDisplayName =
+      [user.first_name, user.last_name].filter(Boolean).join(' ').trim() ||
+      user.username ||
+      user.email ||
+      String(user.id);
     // Check for session inactivity (30 minutes)
     const currentTime = Date.now();
     if (currentTime - user.lastActivity > 30 * 60 * 1000) {
